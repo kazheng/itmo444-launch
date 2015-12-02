@@ -46,6 +46,22 @@ aws autoscaling create-launch-configuration --launch-configuration-name marvel-l
 aws autoscaling create-auto-scaling-group --auto-scaling-group-name marvel-auto-scaling-group --launch-configuration-name marvel-launch-configuration --load-balancer-names marvel-elb  --health-check-type ELB --min-size 3 --max-size 6 --desired-capacity 3 --default-cooldown 600 --health-check-grace-period 120 --vpc-zone-identifier $5
 
 
+#Create DB
+mapfile -t dbInstanceARR < <(aws rds describe-db-instances --output json | grep "\"DBInstanceIdentifier" | sed "s/[\"\:\, ]//g" | sed "s/DBInstanceIdentifier//g" )
 
+if [ ${#dbInstanceARR[@]} -gt 0 ]
+   then
+   echo "Deleting existing RDS database-instances"
+   LENGTH=${#dbInstanceARR[@]}
 
+      for (( i=0; i<${LENGTH}; i++));
+      do
+      if [ ${dbInstanceARR[i]} == "jrh-db" ]
+     then
+      echo "db exists"
+     else
+     aws rds create-db-instance --db-instance-identifier marvel-db --db-instance-class db.t1.micro --engine MySQL --master-username controller --master-user-password ilovebunnies --allocated-storage 5
+      fi
+     done
+fi
 
